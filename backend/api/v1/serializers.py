@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
-from market.models import Category, Subcategory, Product, ProductImage
+from market.models import (
+    Category, Subcategory, Product, ProductImage, ShoppingCart
+)
 
 
 class SubcategorySerializer(serializers.ModelSerializer):
@@ -64,3 +66,15 @@ class ProductSerializer(serializers.ModelSerializer):
             'images'
         )
         read_only_fields = fields
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    product = serializers.SlugRelatedField(
+        slug_field='slug',
+        read_only=True
+    )
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('id', 'product', 'amount', 'total_price')
+        read_only_fields = ('id', 'product', 'total_price')

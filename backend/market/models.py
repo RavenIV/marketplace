@@ -161,3 +161,7 @@ class ShoppingCart(models.Model):
                 name='unique_product_in_cart'
             )
         ]
+
+    @property
+    def total_price(self):
+        return self.product.price * self.amount
