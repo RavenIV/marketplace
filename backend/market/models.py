@@ -67,12 +67,12 @@ class Product(models.Model):
         verbose_name='Подкатегория',
         related_name='products'
     )
-    shopped_by = models.ManyToManyField(
-        to=User,
-        blank=True,
-        related_name='shopping_cart',
-        verbose_name='Добавили в корзину'
-    )
+    # shopped_by = models.ManyToManyField(
+    #     to=User,
+    #     blank=True,
+    #     related_name='shopping_cart',
+    #     verbose_name='Добавили в корзину'
+    # )
 
     class Meta:
         verbose_name = 'Продукт'
@@ -133,3 +133,31 @@ class ProductImage(models.Model):
         image.save(self.image.path)
         image.close()
         self.image.close()
+
+
+class ShoppingCart(models.Model):
+    product = models.ForeignKey(
+        to=Product,
+        on_delete=models.CASCADE,
+        verbose_name='Продукт',
+        related_name='shopped_by',
+    )
+    user = models.ForeignKey(
+        to=User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+        related_name='shopping',
+    )
+    amount = models.PositiveSmallIntegerField(
+        verbose_name='Количество',
+    )
+
+    class Meta:
+        verbose_name = 'Корзина покупок'
+        verbose_name_plural = 'корзины'
+        constraints = [
+            UniqueConstraint(
+                fields=('product', 'user'),
+                name='unique_product_in_cart'
+            )
+        ]
