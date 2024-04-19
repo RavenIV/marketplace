@@ -1,7 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
+from PIL import Image
 
-from .constants import MAX_CHAR_LENGTH
+from .constants import MAX_CHAR_LENGTH, ICON_WIDTH, PREVIEW_WIDTH
 
 
 class User(AbstractUser):
@@ -14,7 +16,6 @@ class CategoryBase(models.Model):
         'Название', max_length=MAX_CHAR_LENGTH, unique=True
     )
     slug = models.SlugField('Слаг', max_length=MAX_CHAR_LENGTH, unique=True)
-    image = models.ImageField('Картинка', upload_to='market/images')
 
     class Meta:
         abstract = True
@@ -25,6 +26,10 @@ class CategoryBase(models.Model):
 
 class Category(CategoryBase):
     """Модель категорий."""
+    image = models.ImageField(
+        'Картинка',
+        upload_to='images/categories/',
+    )
 
     class Meta:
         verbose_name = 'Категория'
@@ -35,6 +40,10 @@ class Category(CategoryBase):
 class Subcategory(CategoryBase):
     """Модель подкатегорий."""
 
+    image = models.ImageField(
+        'Картинка',
+        upload_to='images/subcategories/',
+    )
     category = models.ForeignKey(
         to=Category,
         on_delete=models.PROTECT,
@@ -69,3 +78,58 @@ class Product(models.Model):
         verbose_name = 'Продукт'
         verbose_name_plural = 'продукты'
         ordering = ('title',)
+
+    def __str__(self):
+        return self.title
+
+
+class ProductImage(models.Model):
+    """Модель изображений для продуктов."""
+    class Size(models.TextChoices):
+        ICON = 'ICON', 'Иконка'
+        PREVIEW = 'PREVIEW', 'Превью'
+        ORIGINAL = 'ORIGINAL', 'Оригинальный'
+
+    size = models.CharField(
+        'Размер',
+        max_length=8,
+        choices=Size.choices,
+        default=Size.ORIGINAL,
+    )
+    product = models.ForeignKey(
+        to=Product,
+        on_delete=models.CASCADE,
+        related_name='images',
+        verbose_name='Продукт'
+    )
+    image = models.ImageField(
+        upload_to='images/products/',
+        verbose_name='Изображение'
+    )
+
+    class Meta:
+        verbose_name = 'Изображение продукта'
+        verbose_name_plural = 'изображения продукта'
+        constraints = [
+            UniqueConstraint(
+                fields=('size', 'product'),
+                name='unique_image_size'
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.size == ProductImage.Size.ICON:
+            self.make_thumbnail(ICON_WIDTH)
+        if self.size == ProductImage.Size.PREVIEW:
+            self.make_thumbnail(PREVIEW_WIDTH)
+
+    def make_thumbnail(self, target_width: int):
+        image = Image.open(self.image)
+        width, height = image.size
+        height_coefficient = width/target_width
+        target_height = int(height/height_coefficient)
+        image.thumbnail((target_width, target_height))
+        image.save(self.image.path)
+        image.close()
+        self.image.close()
