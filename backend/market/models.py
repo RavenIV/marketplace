@@ -1,9 +1,10 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from PIL import Image
 
-from .constants import MAX_CHAR_LENGTH, ICON_WIDTH, PREVIEW_WIDTH
+from .constants import MAX_CHAR_LENGTH, ICON_WIDTH, PREVIEW_WIDTH, MIN_PRODUCT_AMOUNT
 
 
 class User(AbstractUser):
@@ -60,7 +61,12 @@ class Subcategory(CategoryBase):
 class Product(models.Model):
     title = models.CharField('Название', max_length=MAX_CHAR_LENGTH)
     slug = models.SlugField('Слаг', max_length=MAX_CHAR_LENGTH, unique=True)
-    price = models.DecimalField('Цена', max_digits=8, decimal_places=2)
+    price = models.DecimalField(
+        'Цена',
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(1.00)]
+    )
     subcategory = models.ForeignKey(
         to=Subcategory,
         on_delete=models.PROTECT,
@@ -150,6 +156,8 @@ class ShoppingCart(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
+        validators=[MinValueValidator(MIN_PRODUCT_AMOUNT)],
+        default=MIN_PRODUCT_AMOUNT
     )
 
     class Meta:

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from market.models import (
     Category, Subcategory, Product, ProductImage, ShoppingCart
@@ -71,10 +72,19 @@ class ProductSerializer(serializers.ModelSerializer):
 class ShoppingCartSerializer(serializers.ModelSerializer):
     product = serializers.SlugRelatedField(
         slug_field='slug',
-        read_only=True
+        queryset=Product.objects.all()
+    )
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
         model = ShoppingCart
-        fields = ('id', 'product', 'amount', 'total_price')
-        read_only_fields = ('id', 'product', 'total_price')
+        fields = ('id', 'product', 'user', 'amount', 'total_price')
+        read_only_fields = ('id', 'total_price')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=('product', 'user')
+            )
+        ]
