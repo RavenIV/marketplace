@@ -121,6 +121,9 @@ class ProductImage(models.Model):
                 name='unique_image_size'
             )
         ]
+    
+    def __str__(self):
+        return f'{self.size} - {self.image.name}'
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
