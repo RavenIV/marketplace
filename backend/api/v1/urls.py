@@ -3,19 +3,40 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    CategoryListView, ProductViewSet, UserViewSet, ShoppingCartView
+    CategoryReadViewSet,
+    ProductReadViewSet,
+    ShoppingView,
+    ShoppingCartView,
+    SubcategoryReadViewset,
+    UserViewSet,
 )
 
 router_v1 = DefaultRouter()
-router_v1.register(r'products', ProductViewSet, basename='product')
-router_v1.register(r'users', UserViewSet, basename='user')
+router_v1.register(r'categories',
+                   CategoryReadViewSet,
+                   basename='category')
+router_v1.register(r'subcategories',
+                   SubcategoryReadViewset,
+                   basename='subcategory')
+router_v1.register(r'products',
+                   ProductReadViewSet,
+                   basename='product')
+router_v1.register(r'users',
+                   UserViewSet,
+                   basename='user')
 
 urlpatterns = [
     path('', include(router_v1.urls)),
     path('auth/', include('djoser.urls.jwt')),
-    path('categories/', CategoryListView.as_view(), name='categories'),
-    path('schema/docs/', SpectacularSwaggerView.as_view(url_name='schema')),
-    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('schema/docs/',
+         SpectacularSwaggerView.as_view(url_name='schema')),
+    path('schema/',
+         SpectacularAPIView.as_view(),
+         name='schema'),
     path('products/<str:product_slug>/shopping/',
-         ShoppingCartView.as_view(), name='shopping')
+         ShoppingView.as_view(),
+         name='shopping'),
+    path('shopping-cart/',
+         ShoppingCartView.as_view(),
+         name='cart')
 ]

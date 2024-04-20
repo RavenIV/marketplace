@@ -4,7 +4,12 @@ from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from PIL import Image
 
-from .constants import MAX_CHAR_LENGTH, ICON_WIDTH, PREVIEW_WIDTH, MIN_PRODUCT_AMOUNT
+from .constants import (
+    ICON_WIDTH,
+    MAX_CHAR_LENGTH,
+    MIN_PRODUCT_AMOUNT,
+    PREVIEW_WIDTH,
+)
 
 
 class User(AbstractUser):
@@ -40,7 +45,6 @@ class Category(CategoryBase):
 
 class Subcategory(CategoryBase):
     """Модель подкатегорий."""
-
     image = models.ImageField(
         'Картинка',
         upload_to='images/subcategories/',
@@ -59,6 +63,7 @@ class Subcategory(CategoryBase):
 
 
 class Product(models.Model):
+    """Модель продуктов."""
     title = models.CharField('Название', max_length=MAX_CHAR_LENGTH)
     slug = models.SlugField('Слаг', max_length=MAX_CHAR_LENGTH, unique=True)
     price = models.DecimalField(
@@ -73,12 +78,6 @@ class Product(models.Model):
         verbose_name='Подкатегория',
         related_name='products'
     )
-    # shopped_by = models.ManyToManyField(
-    #     to=User,
-    #     blank=True,
-    #     related_name='shopping_cart',
-    #     verbose_name='Добавили в корзину'
-    # )
 
     class Meta:
         verbose_name = 'Продукт'
@@ -141,7 +140,8 @@ class ProductImage(models.Model):
         self.image.close()
 
 
-class ShoppingCart(models.Model):
+class ShoppingItem(models.Model):
+    """Модель позиции в корзине покупок."""
     product = models.ForeignKey(
         to=Product,
         on_delete=models.CASCADE,

@@ -1,18 +1,18 @@
+from django.core.validators import MinValueValidator
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
+from market.constants import MIN_PRODUCT_AMOUNT
 from market.models import (
-    Category, Subcategory, Product, ProductImage, ShoppingCart
+    Category, Subcategory, Product, ProductImage, ShoppingItem
 )
 
 
-class SubcategorySerializer(serializers.ModelSerializer):
+class SubcategoryShortSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения подкатегорий."""
 
     class Meta:
         model = Subcategory
         fields = (
-            'id',
             'title',
             'slug',
             'image',
@@ -20,18 +20,47 @@ class SubcategorySerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для чтения категорий."""
-    subcategories = SubcategorySerializer(many=True, read_only=True)
+class CategoryShortSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
         fields = (
-            'id',
             'title',
             'slug',
             'image',
+        )
+        read_only_fields = fields
+
+
+class CategoryDetailSerializer(CategoryShortSerializer):
+    """Сериализатор для чтения категорий."""
+    subcategories = SubcategoryShortSerializer(many=True, read_only=True)
+
+    class Meta(CategoryShortSerializer.Meta):
+        fields = (
+            *CategoryShortSerializer.Meta.fields,
             'subcategories'
+        )
+        read_only_fields = fields
+
+
+class ProductShortSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Product
+        fields = ('slug', 'title', 'price')
+        read_only_fields = fields
+
+
+class SubcategoryDetailSerializer(SubcategoryShortSerializer):
+    products = ProductShortSerializer(many=True, read_only=True)
+    category = CategoryShortSerializer(read_only=True)
+
+    class Meta(SubcategoryShortSerializer.Meta):
+        fields = (
+            *SubcategoryShortSerializer.Meta.fields,
+            'category',
+            'products'
         )
         read_only_fields = fields
 
@@ -44,47 +73,31 @@ class ProductImagesSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    subcategory = serializers.SlugRelatedField(
-        slug_field='title', read_only=True
-    )
-    category = serializers.SlugRelatedField(
-        slug_field='title',
+class ProductSerializer(ProductShortSerializer):
+    subcategory = SubcategoryShortSerializer(read_only=True)
+    category = CategoryShortSerializer(
         source='subcategory.category',
         read_only=True
     )
     images = ProductImagesSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = Product
+    class Meta(ProductShortSerializer.Meta):
         fields = (
-            'id',
-            'title',
-            'slug',
+            *ProductShortSerializer.Meta.fields,
             'category',
             'subcategory',
-            'price',
             'images'
         )
         read_only_fields = fields
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    product = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Product.objects.all()
-    )
-    user = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
+    product = ProductShortSerializer(read_only=True)
+    amount = serializers.IntegerField(
+        validators=[MinValueValidator(MIN_PRODUCT_AMOUNT)]
     )
 
     class Meta:
-        model = ShoppingCart
-        fields = ('id', 'product', 'user', 'amount', 'total_price')
-        read_only_fields = ('id', 'total_price')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=ShoppingCart.objects.all(),
-                fields=('product', 'user')
-            )
-        ]
+        model = ShoppingItem
+        fields = ('product', 'amount', 'total_price')
+        read_only_fields = ('total_price',)
