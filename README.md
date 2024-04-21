@@ -82,9 +82,9 @@ python3 manage.py createsuperuser
 python3 manage.py
 ```
 
-Документация API будет доступна по адресу http://127.0.0.1/api/v1/schema/docs/
+Документация API будет доступна по адресу http://127.0.0.1:8000/api/v1/schema/docs/
 
-Портал администратора: http://127.0.0.1/admin/
+Портал администратора: http://127.0.0.1:8000/admin/
 
 ## Разработка
 
