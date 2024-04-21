@@ -4,7 +4,11 @@ from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
 
 from .models import (
-    Category, Subcategory, Product, ProductImage, User
+    Category,
+    Product,
+    ProductImage,
+    Subcategory,
+    User
 )
 
 
@@ -61,8 +65,8 @@ class ProductAdmin(admin.ModelAdmin):
 
 admin.site.register(User, UserAdmin)
 admin.site.unregister(Group)
-admin.site.site_header = 'Портал администратора Магазина'
+admin.site.site_header = 'Портал администратора Marketplace'
 admin.site.site_title = 'Портал администратора'
 admin.site.index_title = (
-    'Добро пожаловать на портал администратора Магазина!'
+    'Добро пожаловать на портал администратора Marketplace!'
 )
